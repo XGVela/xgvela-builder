@@ -1,0 +1,76 @@
+nf:
+  version: "v1"
+  vendorId: "mvnr"
+  xgvelaId: "xgvela1" #do not edit
+  nfClass: "infra"
+  nfType: "xgvela"
+  nfId: "xgvela1"
+
+
+  cnftpl_configmap:
+    mgmt_cfg:
+      create: false
+      metaspec: 
+        annotations:
+          configMgmt: enabled
+    static_cfg: 
+      create: false
+      metaspec: {}
+    env_cfg:
+      create: false
+      metaspec: {}
+  cnftpl_secret:
+      create: false
+      metaspec: {}
+      secretspec: {}
+  cnftpl_namespaces:
+      create: false
+      metaspec: {}
+  cnftpl_dashboard:
+      create: false
+      metaspec: {}
+  cnftpl_eventdef:
+      create: false
+      metaspec: {}
+  cnftpl_alertsdef:
+      create: false
+      metaspec: {}
+  cnftpl_metricsdef:
+      create: false
+      metaspec: {}
+
+xgvelaStorage:
+  volume:
+    reclaimPolicy: Delete
+    provisioner: kubernetes.io/no-provisioner
+    volumeBindingMode: WaitForFirstConsumer
+
+ 
+lvp:
+  common:
+    app_name: local-volume-provisioner
+          
+  serviceaccount: 
+    name: local-storage-admin
+    
+  cluster:
+    noderole:
+      name: local-storage-provisioner-node-clusterrole
+    noderolebinding:
+      name: local-storage-provisioner-node-binding
+    pvrolebinding:
+      name: local-storage-provisioner-pv-binding
+  
+  configmap:
+    name: local-provisioner-config
+    path: /mnt/fast-disks
+  
+  container:
+    image:
+      hub: 10.1.34.124:5000
+      repository: local-volume-provisioner
+      tag: v2.1.0
+  volume:
+    reclaimPolicy: Delete
+    provisioner: kubernetes.io/no-provisioner
+    volumeBindingMode: WaitForFirstConsumer

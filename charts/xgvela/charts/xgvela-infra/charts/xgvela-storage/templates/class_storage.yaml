@@ -1,0 +1,20 @@
+{{- if .Values.global.xgvela.infra_deploy -}}
+{{- if and (.Values.global) (.Values.global.xgvela) (.Values.global.xgvela.storage) (.Values.global.xgvela.storage.isProviderXGVela) }}
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: xgvela-local-storage
+provisioner: {{ .Values.xgvelaStorage.volume.provisioner }}
+reclaimPolicy: {{ .Values.xgvelaStorage.volume.reclaimPolicy }}
+volumeBindingMode: {{ .Values.xgvelaStorage.volume.volumeBindingMode }}
+{{- end -}}
+{{- if and (.Values.global) (.Values.global.xgvela) (.Values.global.xgvela.storage) (.Values.global.xgvela.storage.isProviderXGVela) (.Values.global.xgvela.storage.isLVPenabled) }}
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: fast-disks
+provisioner: {{ .Values.lvp.volume.provisioner }}
+reclaimPolicy: {{ .Values.lvp.volume.reclaimPolicy }}
+volumeBindingMode: {{ .Values.lvp.volume.volumeBindingMode }}
+{{- end -}}
+{{- end -}}

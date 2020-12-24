@@ -1,0 +1,104 @@
+nf:
+  version: "v1"
+  vendorId: "mvnr"
+  xgvelaId: "xgvela1" #do not edit
+  nfClass: "infra"
+  nfType: "xgvela"
+  nfId: "xgvela1"
+
+  cnftpl_configmap:
+    mgmt_cfg:
+      create: false
+      metaspec:
+        annotations:
+          configMgmt: enabled
+    static_cfg:
+      create: false
+      metaspec: {}
+    env_cfg:
+      create: false
+      metaspec: {}
+  cnftpl_secret:
+      create: false
+      metaspec: {}
+      secretspec: {}
+  cnftpl_namespaces:
+      create: false
+      metaspec: {}
+  cnftpl_dashboard:
+      create: false
+      metaspec: {}
+  cnftpl_eventdef:
+      create: false
+      metaspec: {}
+  cnftpl_alertsdef:
+      create: false
+      metaspec: {}
+  cnftpl_metricsdef:
+      create: false
+      metaspec: {}
+
+#namespace: xgvela-cnf-infra
+hub: 10.1.1.1:5000
+common:
+  app_name: etcd
+
+componentSpec:
+  deployment:
+    pod_metaspec:
+      labels:
+        app: etcd
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "2379"
+
+  service:
+    metaspec:
+      labels:
+        app: etcd
+
+service:
+  svc_type: ClusterIP
+  ports:
+    client: 2379
+    server: 2380
+    http: 80
+
+container:
+  replica_count: 3
+  image:
+    hub: 10.1.34.114:5000
+    repository: etcd-alpine
+    tag: v3.3.15
+  config:
+    HOST_NAME_COMMAND: echo $K8S_POD_ID
+    HOST_DOMAIN_COMMAND: echo etcd.$K8S_NAMESPACE.svc.cluster.local
+    ETCD_NAME: _{HOST_NAME_COMMAND}
+    ETCD_CLIENT_URLS: http://0.0.0.0:2379
+    ETCD_PEER_URLS: http://0.0.0.0:2380
+    ETCD_ADVERTISE_CLIENT_URLS: http://_{HOST_NAME_COMMAND}._{HOST_DOMAIN_COMMAND}:2379
+    ETCD_INITIAL_ADVERTISE_PEER_URLS: http://_{HOST_NAME_COMMAND}._{HOST_DOMAIN_COMMAND}:2380
+    ETCD_INITIAL_CLUSTER_TOKEN: etcd-cluster-1
+    ETCD_HEARTBEAT_INTERVAL: "100"
+    ETCD_ELECTION_TIMEOUT: "1000"
+    ETCD_INITIAL_CLUSTER_STATE: "new"
+    ETCD_INITIAL_CLUSTER: etcd-0=http://etcd-0._{HOST_DOMAIN_COMMAND}:2380,etcd-1=http://etcd-1._{HOST_DOMAIN_COMMAND}:2380,etcd-2=http://etcd-2._{HOST_DOMAIN_COMMAND}:2380
+  resource:
+    limit_memory: 250Mi
+    limit_cpu: 250m
+    requests_memory: 125Mi
+    requests_cpu: 125m
+  ports:
+    client: 2379
+    server: 2380
+
+volume:
+  name: etcd-pv
+  pathprefix: xgvela-volumes/etcd-pv
+  pvenabled: true
+  storageClaim: 2Gi
+  storageCapacity: 2Gi
+  accessModes: "ReadWriteOnce"
+  reclaimPolicy: "Delete"
+  storageClassName: ""

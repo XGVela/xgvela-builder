@@ -1,0 +1,15 @@
+version: '3.1'
+services:
+  kafkacattest:
+    image: confluentinc/cp-kafkacat
+    environment:
+       - BROKER_LIST
+       - KAFKA_VERSION=${KAFKA_VERSION-2.1.0}
+    volumes:
+      - .:/tests
+    working_dir: /tests
+    entrypoint:
+      - ./runTestPattern.sh
+    command:
+      - "*/*.kafkacat.sh"
+

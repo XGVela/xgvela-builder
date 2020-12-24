@@ -1,0 +1,77 @@
+global:
+  dnPrefix: "mvnr"
+  xgvela:
+    use_release_ns: false
+    create_ns: true
+    infra_deploy: true
+    infraNodeSelector:
+      enabled: true
+      labelKey: infra
+      labelValue: true
+    mgmtNodeSelector:
+      enabled: true
+      labelKey: mgmt
+      labelValue: true
+    kafka_svc_fqdn: "kafka-svc.xgvela-xgvela1-infra-xgvela-xgvela1.svc.cluster.local:9092"
+    etcd_svc_fqdn: "etcd.xgvela-xgvela1-infra-xgvela-xgvela1.svc.cluster.local:2379"
+    logging_svc_url: "fb-service.xgvela-paas.svc.cluster.local:5175"
+    logging_svc_tcp_port: "5170"
+    k8s_svc_fqdn: "kubernetes.default.svc.cluster.local"
+    zk_svc_fqdn: "zk-0.zk.xgvela-xgvela1-infra-xgvela-xgvela1.svc.cluster.local:2181,zk-1.zk.xgvela-xgvela1-infra-xgvela-xgvela1.svc.cluster.local:2181,zk-2.zk.xgvela-xgvela1-infra-xgvela-xgvela1.svc.cluster.local:2181"
+    storage_engine: "elasticsearch"
+    enable_retrx : "false"
+    log_format: "json"
+    limaasEnabled: false
+    enableXGVelaScaling: false
+    storage:
+      storageClass: "openebs-standalone"
+      isProviderXGVela: false
+      isLVPenabled: false
+      xgvelaLocalStorageHostPathPrefix: "/data"
+      xgvelaLocalStoragePVJobImage: "xgvela-svc-init"
+      xgvelaLocalStoragePVJobTag: "v0.3.4"
+      hostlocalVolumeSelector: []
+    fluentd:
+      enabled: false
+      output:
+        brokers: <output_kafka_url>:<port> # output kafka url
+        topic: logs
+
+nf:
+  version: "v1"
+  vendorId: "mvnr"
+  xgvelaId: "xgvela1" #do not edit
+  nfClass: "infra"
+  nfType: "xgvela"
+  nfId: "xgvela1"
+  cnftpl_configmap:
+    mgmt_cfg:
+      create: false
+      metaspec:
+        annotations:
+          configMgmt: enabled
+    static_cfg:
+      create: false
+      metaspec: {}
+    env_cfg:
+      create: false
+      metaspec: {}
+  cnftpl_secret:
+      create: false
+      metaspec: {}
+      secretspec: {}
+  cnftpl_namespaces:
+      create: false
+      metaspec: {}
+  cnftpl_dashboard:
+      create: false
+      metaspec: {}
+  cnftpl_eventdef:
+      create: false
+      metaspec: {}
+  cnftpl_alertsdef:
+      create: false
+      metaspec: {}
+  cnftpl_metricsdef:
+      create: false
+      metaspec: {}

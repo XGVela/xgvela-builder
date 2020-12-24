@@ -1,0 +1,92 @@
+{{- if .Values.global.xgvela.infra_deploy -}}
+{{- $cnfHdr := (dict "" "") -}}
+{{- include "cnfTplHeader_2_9" (dict "cnfHdr" $cnfHdr "dot" . ) -}}
+apiVersion: apps/v1
+kind: StatefulSet
+{{- include "cnfTplMetadata_2_9" (dict "setOffset" "0" "cnfHdr" $cnfHdr "metadata" "") }}
+spec:
+  serviceName: {{ .Values.common.app_name }}-svc
+  replicas: {{ .Values.container.replica_count }}
+  selector:
+    matchLabels:
+      app: {{ .Values.common.app_name }}
+  template:
+    {{- include "cnfTplMetadata_2_9" (dict "setOffset" "4" "cnfHdr" $cnfHdr "metadata" .Values.componentSpec.deployment.pod_metaspec) }}
+    spec:
+      initContainers:
+      - name: {{ .Values.common.svc_app_name }}
+        image: {{ .Values.global.hub }}/{{ .Values.initContainers.image.repository }}:{{ .Values.initContainers.image.tag }}
+        imagePullPolicy: Always
+        env:
+        - name: ZK_SVC_FQDN
+          value: {{ (print "zk."  $cnfHdr.nfVariables.nfPrefix  ".svc.cluster.local") | quote }}
+        - name: service
+          value: {{ .Values.common.app_name }}
+        - name: KAFKA_ZOOKEEPER_CONNECT
+          value: {{ include "kafkazkconnectendpoints" (dict "count" (int .Values.container.zk_endpoint_count) "namespace" ($cnfHdr.nfVariables.nfPrefix)) | quote }}
+        command: [ "/bin/bash", "-c", "svc-discovery.sh" ]
+      containers:
+      - name: {{ .Values.common.app_name }}
+        {{- if and (.Values.global) (.Values.global.hub) }}
+        image: {{ .Values.global.hub }}/{{ .Values.container.image.repository }}:{{ .Values.container.image.tag }}
+        {{- else }}
+        image: {{ .Values.container.image.hub }}/{{ .Values.container.image.repository }}:{{ .Values.container.image.tag }}
+        {{- end }}
+        env:
+        - name: K8S_POD_ID
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: HOSTNAME_COMMAND
+          value: {{ .Values.container.config.HOSTNAME_COMMAND | quote }}
+        - name: KAFKA_BROKER_ID
+          value: {{ .Values.container.config.KAFKA_BROKER_ID| quote }}
+        - name: KAFKA_ZOOKEEPER_CONNECT
+          value: {{ include "kafkazkconnectendpoints" (dict "count" (int .Values.container.zk_endpoint_count) "namespace" ($cnfHdr.nfVariables.nfPrefix)) | quote }}
+        - name: KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS 
+          value: {{ .Values.container.config.KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS | quote }}
+        - name: KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS
+          value: {{ .Values.container.config.KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS | quote }}
+        - name: KAFKA_LISTENERS
+          value: {{ .Values.container.config.KAFKA_LISTENERS | quote }}
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: {{ (print "PLAINTEXT://_{HOSTNAME_COMMAND}.kafka-svc." $cnfHdr.nfVariables.nfPrefix ".svc.cluster.local" ":9092") | quote }}
+        - name: KAFKA_HEAP_OPTS
+          value: {{ .Values.container.config.KAFKA_HEAP_OPTS | quote }}
+        - name: KAFKA_CREATE_TOPICS
+          value: {{ .Values.container.config.KAFKA_CREATE_TOPICS | quote }}
+        resources:
+          limits:
+            cpu: {{ .Values.container.resource.limit_cpu }}
+            memory: {{ .Values.container.resource.limit_memory }}
+          requests:
+            cpu: {{ .Values.container.resource.requests_cpu }}
+            memory: {{ .Values.container.resource.requests_memory }}
+        ports:
+        - containerPort: {{ .Values.container.ports.broker }}
+{{- if .Values.volume.pvenabled }}
+        volumeMounts:
+        - name: kafka-vol
+          mountPath: /kafka
+{{- end }}
+{{- if and (.Values.global) (.Values.global.xgvela) (.Values.global.xgvela.infraNodeSelector) (.Values.global.xgvela.infraNodeSelector.enabled) }}
+      nodeSelector:
+        {{ .Values.global.xgvela.infraNodeSelector.labelKey }}: {{ .Values.global.xgvela.infraNodeSelector.labelValue | quote }}
+{{- end }}
+{{- if .Values.volume.pvenabled }}
+  volumeClaimTemplates:
+  - metadata:
+      name: kafka-vol
+    spec:
+      accessModes: [ {{ .Values.volume.accessModes }} ]
+      storageClassName: {{ .Values.global.xgvela.storage.storageClass }}
+      resources:
+        requests:
+          storage: {{ .Values.volume.storageClaim }}
+{{- if and (.Values.global) (.Values.global.xgvela) (.Values.global.xgvela.storage) (.Values.global.xgvela.storage.isProviderXGVela) }}
+      selector:
+        matchLabels:
+          kafka-vol: "true"
+{{- end }}
+{{- end }}
+{{- end }}

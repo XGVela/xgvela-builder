@@ -1,0 +1,62 @@
+groups:
+  - interval: 5s
+    name: system_tca
+    rules:
+      # Alert for any nodedown for >10 seconds.
+      - alert: "SystemNodeDown"
+        expr: up{job="kubernetes-nodes"} == 0
+        for: 10s
+        labels:
+          severity: WARNING
+        annotations:
+          sourceId: {{ `"node={{ $labels.instance }}"` }}
+          eventName: "SystemNodeDown"
+          originType: "system_tca"
+          message: {{ `"Node {{ $labels.instance }}  is down. "` }}
+          podId: {{ `"{{ $labels.pod }}"` }}
+          microservice: {{ `"{{ $labels.microSvcName}}" `}}
+          nfType: {{ $.Values.nf.nfType | quote}}
+      # Alert for any instance that is having Critical Disk Usage condition  for >1 minutes.
+      - alert: "SystemOutOfDiskSpace"
+        expr: 100 * ( (sum(node_filesystem_size_bytes{device="rootfs"}) BY (instance , fstype, device, kubernetes_node) -sum( node_filesystem_free_bytes{device="rootfs"}) BY (instance , fstype, device, kubernetes_node))/sum(node_filesystem_size_bytes{device="rootfs"}) BY (instance , fstype, device,kubernetes_node)) > {{ $.Values.alerts.diskspace}}
+        for: 1m
+        labels:
+          severity: WARNING
+        annotations:
+          sourceId: {{ `"device={{ $labels.device }}|fstype={{ $labels.fstype }}|node={{ $labels.kubernetes_node  }}"` }}
+          eventName: "SystemOutOfDiskSpace"
+          originType: "system_tca"
+          message: {{ `"Node {{ $labels.kubernetes_node }}  Disk usage  is more than `}} {{  $.Values.alerts.diskspace }} {{ `percentage. Current value = {{ $value }}"` }}
+          podId: {{ `"{{ $labels.pod }}"` }}
+          microservice: {{ `"{{ $labels.microSvcName}}" `}}
+          nfType: {{ $.Values.nf.nfType | quote}}
+
+      # Alert for any instance that is  running Out of memory for >1 minutes.
+      - alert: "SystemOutOfMemory"
+        expr: sum(kube_pod_container_resource_requests_memory_bytes) BY (node, instance,kubernetes_namespace ) /sum(kube_node_status_allocatable_memory_bytes) BY (node, instance, kubernetes_namespace) * 100 > {{ $.Values.alerts.memory}}
+        for: 1m
+        labels:
+          severity: WARNING
+        annotations:
+          sourceId: {{ `"node={{ $labels.node }}"` }}
+          eventName: "SystemOutOfMemory"
+          originType: "system_tca"
+          message: {{ `"Node {{ $labels.node }} . memory usage is more than `}} {{  $.Values.alerts.memory }} {{ `percentage. Current value = {{ $value }}"` }}
+          podId: {{` "{{ $labels.pod }}" `}}
+          microservice: {{` "{{ $labels.microSvcName}}" `}}
+          nfType: {{ $.Values.nf.nfType | quote}}
+
+      # Alert for any instance that is having High Cpu Load for >1 minutes.
+      - alert: "SystemHighCpuLoad"
+        expr: sum(kube_pod_container_resource_requests_cpu_cores) BY (node, instance,kubernetes_namespace) / sum(kube_node_status_allocatable_cpu_cores) BY (node, instance,kubernetes_namespace) * 100 > {{ $.Values.alerts.cpu }}
+        for: 1m
+        labels:
+          severity: WARNING
+        annotations:
+          sourceId: {{ `"node={{ $labels.node }}"` }}
+          eventName: "SystemHighCpuLoad"
+          originType: "system_tca"
+          message: {{ `"Node {{ $labels.node }} CPU load is more than `}} {{ $.Values.alerts.cpu }}  {{ `percentage. Current value = {{ $value }}"` }}
+          podId: {{` "{{ $labels.pod }}" `}}
+          microservice: {{` "{{ $labels.microSvcName}}" `}}
+          nfType: {{ $.Values.nf.nfType | quote }}

@@ -1,0 +1,21 @@
+{{- if .Values.global.xgvela.infra_deploy -}}
+{{- if and (.Values.global) (.Values.global.xgvela) (.Values.global.xgvela.storage) (.Values.global.xgvela.storage.isProviderXGVela) (.Values.global.xgvela.storage.isLVPenabled)}}
+{{- $cnfHdr := (dict "" "") -}} 
+{{- include "cnfTplHeader_2_9" (dict "cnfHdr" $cnfHdr "dot" . ) -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.lvp.configmap.name}}
+  namespace: {{ $cnfHdr.nfVariables.nfPrefix }}  
+data:
+  storageClassMap: |
+    fast-disks:
+       hostDir: {{ .Values.lvp.configmap.path }}
+       mountDir:  {{ .Values.lvp.configmap.path }}
+       blockCleanerCommand:
+         - "/scripts/shred.sh"
+         - "2"
+       volumeMode: Filesystem
+       fsType: ext4
+{{- end -}}
+{{- end -}}

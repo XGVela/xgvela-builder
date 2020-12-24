@@ -1,0 +1,48 @@
+{
+    "events": {
+        "SystemOutOfMemory": {
+            "eventType": "HostOS",
+            "perceivedSeverity": "WARNING",
+            "probableCause": "Node memory is filling up",
+            "specificProblem": "Memory usage is observed above threshold value",
+            "rootCauseIndicator": "",
+            "trendIndication": "",
+            "correlatedNotifications": "",
+            "additionalText": "Node memory is filling up",
+            "proposedRepairAction": "Consider memory cleanup"
+        },
+        "SystemOutOfDiskSpace": {
+            "eventType": "HostOS",
+            "perceivedSeverity": "WARNING",
+            "probableCause": "Disk is almost full",
+            "specificProblem": "Out of disk space observed",
+            "rootCauseIndicator": "",
+            "trendIndication": "",
+            "correlatedNotifications": "",
+            "additionalText": "Disk space is almost full",
+            "proposedRepairAction": "Cleanup unused data"
+         },
+        "SystemNodeDown": {
+            "eventType": "HostOS",
+            "perceivedSeverity": "WARNING",
+            "probableCause": "Node is down",
+            "specificProblem": "Node down observed",
+            "rootCauseIndicator": "",
+            "trendIndication": "",
+            "correlatedNotifications": "",
+            "additionalText": "Node down",
+            "proposedRepairAction": "Consider reboot"
+        },
+        "SystemHighCpuLoad": {
+            "eventType": "HostOS",
+            "perceivedSeverity": "WARNING",
+            "probableCause": "CPU load is above threshold value",
+            "specificProblem": "High Cpu Load observed",
+            "rootCauseIndicator": "",
+            "trendIndication": "",
+            "correlatedNotifications": "",
+            "additionalText": "CPU load is high",
+            "proposedRepairAction": "Consider reducing CPU load"
+        }
+    }
+}

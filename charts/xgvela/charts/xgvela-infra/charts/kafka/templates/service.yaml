@@ -1,0 +1,20 @@
+{{- if .Values.global.xgvela.infra_deploy -}}
+{{- $cnfHdr := (dict "" "") -}}
+{{- include "cnfTplHeader_2_9" (dict "cnfHdr" $cnfHdr "dot" . ) -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.common.app_name }}-svc
+  namespace: {{ $cnfHdr.nfVariables.nfPrefix }}
+  labels:
+    app: {{ .Values.common.app_name }}
+spec:
+  type: {{ .Values.service.svc_type }}
+  ports:
+  - port: {{ .Values.service.ports.broker }} 
+    name: broker
+  - port: {{ .Values.service.ports.http }} 
+    name: http
+  selector:
+    app: {{ .Values.common.app_name }}
+{{- end }}

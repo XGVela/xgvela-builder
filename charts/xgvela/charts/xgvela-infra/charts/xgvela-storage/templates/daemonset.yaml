@@ -1,0 +1,56 @@
+{{- if .Values.global.xgvela.infra_deploy -}}
+{{- if and (.Values.global) (.Values.global.xgvela) (.Values.global.xgvela.storage) (.Values.global.xgvela.storage.isProviderXGVela) (.Values.global.xgvela.storage.isLVPenabled)}}
+{{- $cnfHdr := (dict "" "") -}} 
+{{- include "cnfTplHeader_2_9" (dict "cnfHdr" $cnfHdr "dot" . ) -}}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Values.lvp.common.app_name}}
+  labels:
+    app: {{ .Values.lvp.common.app_name}}
+  namespace: {{ $cnfHdr.nfVariables.nfPrefix }} 
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.lvp.common.app_name}}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.lvp.common.app_name}}
+    spec:
+      {{- if and (.Values.global) (.Values.global.xgvela) (.Values.global.xgvela.infraNodeSelector) (.Values.global.xgvela.infraNodeSelector.enabled) }}
+      nodeSelector:
+        {{ .Values.global.xgvela.infraNodeSelector.labelKey }}: {{ .Values.global.xgvela.infraNodeSelector.labelValue | quote }}
+      {{- end }}
+      serviceAccountName: {{ .Values.lvp.serviceaccount.name}}
+      containers:
+        - name: provisioner
+          {{- if (.Values.global) and (.Values.global.hub) }}
+          image: {{ .Values.global.hub }}/{{ .Values.lvp.container.image.repository }}:{{ .Values.lvp.container.image.tag }}
+          {{- else }}
+          image: {{ .Values.lvp.container.image.hub }}/{{ .Values.lvp.container.image.repository }}:{{ .Values.lvp.container.image.tag }}
+          {{- end }}
+          imagePullPolicy: "Always"         
+          securityContext:
+            privileged: true
+          env:
+          - name: MY_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          volumeMounts:
+            - mountPath: /etc/provisioner/config
+              name: provisioner-config
+              readOnly: true
+            - mountPath:  {{ .Values.lvp.configmap.path }}
+              name: fast-disks
+              mountPropagation: "HostToContainer"
+      volumes:
+        - name: provisioner-config
+          configMap:
+            name: {{ .Values.lvp.configmap.name }}
+        - name: fast-disks
+          hostPath:
+            path: {{ .Values.lvp.configmap.path }}
+{{- end -}}
+{{- end -}}

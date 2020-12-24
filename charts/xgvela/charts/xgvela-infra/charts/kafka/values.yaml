@@ -1,0 +1,102 @@
+nf:
+  version: "v1"
+  vendorId: "mvnr"
+  xgvelaId: "xgvela1" #do not edit
+  nfClass: "infra"
+  nfType: "xgvela"
+  nfId: "xgvela1"
+
+  cnftpl_configmap:
+    mgmt_cfg:
+      create: false
+      metaspec:
+        annotations:
+          configMgmt: enabled
+    static_cfg:
+      create: false
+      metaspec: {}
+    env_cfg:
+      create: false
+      metaspec: {}
+  cnftpl_secret:
+      create: false
+      metaspec: {}
+      secretspec: {}
+  cnftpl_namespaces:
+      create: false
+      metaspec: {}
+  cnftpl_dashboard:
+      create: false
+      metaspec: {}
+  cnftpl_eventdef:
+      create: false
+      metaspec: {}
+  cnftpl_alertsdef:
+      create: false
+      metaspec: {}
+  cnftpl_metricsdef:
+      create: false
+      metaspec: {}
+
+
+namespace: "xgvela-xgvelax-infra-xgvela-xgvelax"
+hub: 10.1.1.1:5000
+
+componentSpec:
+  deployment:
+    pod_metaspec:
+      labels:
+        app: kafka
+
+  service:
+    metaspec:
+      labels:
+        app: kafka
+
+common:
+  app_name: kafka
+  svc_app_name: svc-discovery
+
+service:
+  svc_type: ClusterIP
+  ports:
+    broker: 9092
+    http: 80
+
+initContainers:
+  image:
+    repository: xgvela-svc-init
+    tag: v0.3.4
+
+container:
+  replica_count: 3
+  zk_endpoint_count: 3
+  image:
+    hub: 10.1.34.114:5000
+    repository: kafka-alpine
+    tag: v2.1.0-2
+  config:
+    HOSTNAME_COMMAND: hostname
+    KAFKA_BROKER_ID: ${_{HOSTNAME_COMMAND}}
+    KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS: 300000
+    KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS: 300000
+    KAFKA_LISTENERS: PLAINTEXT://:9092
+    KAFKA_HEAP_OPTS: -Xmx512M -Xms512M
+    KAFKA_CREATE_TOPICS: "EVENT:5:3:3600000,CONFIG:5:3:3600000,TMAAS:5:3:3600000,FMAASEVENTS:1:3:3600000,LOGS:10:3:3600000"
+  resource:
+    limit_memory: 2000Mi
+    limit_cpu: 1000m
+    requests_memory: 128Mi
+    requests_cpu: 128m
+  ports:
+    broker: 9092
+
+volume:
+  name: kafka-pv
+  pathprefix: xgvela-volumes/kafka-pv
+  pvenabled: true
+  storageClaim: 6Gi
+  storageCapacity: 6Gi
+  accessModes: "ReadWriteOnce"
+  reclaimPolicy: "Delete"
+  storageClassName: ""

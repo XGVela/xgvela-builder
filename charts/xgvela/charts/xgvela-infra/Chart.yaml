@@ -1,0 +1,10 @@
+apiVersion: v1
+appVersion: "0.1"
+description: NF Service template.
+engine: gotpl
+maintainers:
+- email: maintainer@xgvela.org
+  name: xGVela Maintainer
+name: xgvela-infra
+tillerVersion: '>=2.8.0'
+version: "1.2.3"

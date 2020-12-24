@@ -1,0 +1,49 @@
+{{- if .Values.global.xgvela.infra_deploy -}}
+{{- if and (.Values.global) (.Values.global.xgvela) (.Values.global.xgvela.storage) (.Values.global.xgvela.storage.isProviderXGVela) (.Values.global.xgvela.storage.isLVPenabled)}}
+{{- $cnfHdr := (dict "" "") -}}
+{{- include "cnfTplHeader_2_9" (dict "cnfHdr" $cnfHdr "dot" . ) -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata: 
+  name: {{ .Values.lvp.serviceaccount.name}}
+  namespace: {{ $cnfHdr.nfVariables.nfPrefix }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Values.lvp.cluster.pvrolebinding.name}}
+  namespace: {{ $cnfHdr.nfVariables.nfPrefix }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: "system:persistent-volume-provisioner"
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.lvp.serviceaccount.name}}
+  namespace: {{ $cnfHdr.nfVariables.nfPrefix }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ .Values.lvp.cluster.noderole.name}}
+  namespace: {{ $cnfHdr.nfVariables.nfPrefix }}
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ .Values.lvp.cluster.noderolebinding.name}}
+  namespace: {{ $cnfHdr.nfVariables.nfPrefix }}
+subjects:
+- kind: ServiceAccount
+  name: {{ .Values.lvp.serviceaccount.name}}
+  namespace: {{ $cnfHdr.nfVariables.nfPrefix }}
+roleRef:
+  kind: ClusterRole
+  name: {{ .Values.lvp.cluster.noderole.name}}
+  apiGroup: rbac.authorization.k8s.io
+{{- end -}}
+{{- end -}}

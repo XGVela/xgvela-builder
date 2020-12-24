@@ -1,0 +1,171 @@
+#Replace <image repo ip:port> with repoip:repo port or fqdn
+#Replace <k8s worker node id> please specify the worker node id where we need storage as part of local-storage solution. 
+
+global:
+  hub: <image repo ip:port>
+  dnPrefix: "xgvela1"
+  xgvela:
+    ##use_release_ns indicates whether to use release namespace for xgvela. set this to false and create_ns true for xgvela to create the namespace as per xgvela standards
+    use_release_ns: true
+
+    ##create_ns indicates to create namespace as per xgvela standards. set this to true if use_release_ns is set to false
+    create_ns: false
+
+    ##infra_deploy is used to control deployment of infra components at xgvela
+    infra_deploy: true
+
+    ##infraNodeSelector is used to control the  node selector config for xgvela infra components. Values can be customized as per the needs.
+    infraNodeSelector:
+      enabled: true
+      labelKey: infra
+      labelValue: true
+
+    ##mgmtNodeSelector is used to control the  node selector config for xgvela mgmt components. Values can be customized as per the needs.
+    mgmtNodeSelector:
+      enabled: true
+      labelKey: mgmt
+      labelValue: true
+
+    ##when use_release_ns is set to true, Kafka and etcd service fqdn. set the appropriate namespace(<namespace> to be replaced with release namespace) in the value. Comment the lines in case if use_release_ns=false
+    kafka_svc_fqdn: "kafka-svc.xgvela.svc.cluster.local:9092"
+    etcd_svc_fqdn: "etcd.xgvela.svc.cluster.local:2379"
+    zk_svc_fqdn: "zk-0.zk.xgvela.svc.cluster.local:2181,zk-1.zk.xgvela.svc.cluster.local:2181,zk-2.zk.xgvela.svc.cluster.local:2181"
+
+    ##Backend Storage 
+    storage_engine: "zookeeper"
+
+    ##By default openebs storage support is configured. In case xgvela local disk storage is required uncomment the following and provide hostname (replace <hostname> with appropriate worker node which is labelled with infraNodeSelector and mgmtNodeSelector key=value. In case of openebs storage usage (default) keep below lines commented. 
+    storage:
+      isProviderXGVela: true
+      storageClass: "xgvela-local-storage"
+      xgvelaLocalStorageHostPathPrefix: "/data"
+      xgvelaLocalStoragePVJobTag: "v0.1-xgvela"
+      hostlocalVolumeSelector:
+      - <k8s worker node id>
+
+xgvela-infra:
+  etcd:
+    container:
+      replica_count: 1
+      resource:
+        limit_memory: 250Mi
+        limit_cpu: 150m
+        requests_memory: 100Mi
+        requests_cpu: 100m
+  kafka:
+    initContainers:
+      image:
+        tag: v0.1-xgvela
+    container:
+      replica_count: 1
+      zk_endpoint_count: 1
+      image:
+        tag: v2.1.0-3
+      config:
+        KAFKA_CREATE_TOPICS: "EVENT:5:1,CONFIG:5:1,TMAAS:5:1,FMAASEVENTS:1:1,TRL:1:1,AVRO:1:1,CHFCC:10:1,CGFLOAD:10:1,CGFAGG:10:1,LOGS:10:1"
+      resource:
+        limit_memory: 1000Mi
+        limit_cpu: 1000m
+        requests_memory: 250Mi
+        requests_cpu: 250m
+  zk:
+    container:
+      replica_count: 1
+      resource:
+        limit_memory: 250Mi
+        limit_cpu: 150m
+        requests_memory: 100Mi
+        requests_cpu: 100m
+xgvela-mgmt:
+  config-service:
+    config_service:
+      init_container:
+        image:
+          tag: v0.1-xgvela
+      container:
+        image:
+          tag: v0.1-xgvela
+        resource:
+          limit_memory: 500Mi
+          limit_cpu: 200m
+          request_memory: 200Mi
+          request_cpu: 200m
+    oam_sidecar:
+      container:
+        image:
+          tag: v0.1-xgvela
+        resource:
+          limit_memory: 200Mi
+          limit_cpu: 100m
+  fault-service:
+    fault_service:
+      init_container:
+        image:
+          tag: v0.1-xgvela
+      container:
+        image:
+          tag: v0.1-xgvela
+        resource:
+          limit_memory: 500Mi
+          limit_cpu: 200m
+          request_memory: 200Mi
+          request_cpu: 200m
+    oam_sidecar:
+      container:
+        image:
+          tag: v0.1-xgvela
+        resource:
+          limit_memory: 200Mi
+          limit_cpu: 100m
+  topo-gw:
+    tmaas:
+      init_container:
+        image:
+          tag: v0.1-xgvela
+    componentSpec:
+      deployment:
+        topo_gw:
+          tag: v0.1-xgvela
+          resource:
+            limit_memory: 500Mi
+            limit_cpu: 200m
+            request_memory: 200Mi
+            request_cpu: 200m
+        cim:
+          tag: v0.1-xgvela
+          resource:
+            limit_memory: 200Mi
+            limit_cpu: 100m
+  topo-engine:
+    tmaas:
+      init_container:
+        image:
+          tag: v0.1-xgvela
+    componentSpec:
+      deployment:
+        topo_engine:
+          tag: v0.1-xgvela
+          resource:
+            limit_memory: 500Mi
+            limit_cpu: 200m
+            request_memory: 200Mi
+            request_cpu: 200m
+        cim:
+          tag: v0.1-xgvela
+          resource:
+            limit_memory: 200Mi
+            limit_cpu: 100m
+  ves-gateway:
+    ves_gateway:
+      image:
+        tag: v0.1-xgvela
+      init_container:
+        image:
+          tag: v0.1-xgvela
+    oam_sidecar:
+      container:
+        image:
+          tag: v0.1-xgvela
+        resource:
+          limit_memory: 200Mi
+          limit_cpu: 100m

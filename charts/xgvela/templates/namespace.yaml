@@ -1,0 +1,9 @@
+{{ $cnfHdr := (dict "" "") -}}
+{{- include "cnfTplHeader_2_9" (dict "cnfHdr" $cnfHdr "dot" . ) -}}
+{{- if and (.Values.global) (.Values.global.xgvela) (.Values.global.xgvela.create_ns) (.Values.global.xgvela.use_release_ns) -}}
+apiVersion: v1
+kind: Namespace
+{{- $_ := set $cnfHdr.nfVariables "component_name" ($cnfHdr.nfVariables.nfPrefix|toString) -}}
+{{- $_ := set $cnfHdr.nfVariables "create_meta_ns" "false" -}}
+{{- include "cnfTplMetadata_2_9" (dict "setOffset" "0" "cnfHdr" $cnfHdr "metadata" $cnfHdr.nfVariables.root.Values.nf.cnftpl_namespaces.metaspec) }}
+{{- end -}}

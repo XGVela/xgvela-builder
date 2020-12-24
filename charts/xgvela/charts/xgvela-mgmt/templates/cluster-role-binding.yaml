@@ -1,0 +1,13 @@
+{{- $cnfHdr := (dict "" "") -}}
+{{- include "cnfTplHeader_2_9" (dict "cnfHdr" $cnfHdr "dot" . ) -}}
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+{{- include "cnfTplMetadata_2_9" (dict "setOffset" "0" "cnfHdr" $cnfHdr "metadata" "") }}
+subjects:
+- kind: ServiceAccount
+  name: xgvela-sa
+  namespace: {{ $cnfHdr.nfVariables.nfPrefix }}
+roleRef:
+  kind: ClusterRole
+  name: {{ $cnfHdr.nfVariables.xgvelaId }}-xgvela
+  apiGroup: rbac.authorization.k8s.io

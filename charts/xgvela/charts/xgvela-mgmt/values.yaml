@@ -1,0 +1,152 @@
+nf:
+  version: "mgmt_tag"
+  vendorId: "mvnr"
+  xgvelaId: "xgvela1" #do not edit
+  nfClass: "mgmt"
+  nfType: "xgvela"
+  nfId: "xgvela1"
+  cnftpl_configmap:
+    mgmt_cfg:
+      create: false
+      metaspec:
+        annotations:
+          configMgmt: enabled
+    static_cfg:
+      create: false
+      metaspec: {}
+    env_cfg:
+      create: false
+      metaspec: {}
+  cnftpl_secret:
+      create: false
+      metaspec: {}
+      secretspec: {}
+  cnftpl_namespaces:
+      create: false
+      metaspec: {}
+  cnftpl_dashboard:
+      create: false
+      metaspec: {}
+  cnftpl_eventdef:
+      create: true
+      metaspec: {}
+  cnftpl_alertsdef:
+      create: true
+      metaspec: {}
+  cnftpl_metricsdef:
+      create: false
+      metaspec: {}
+
+mmaas-controller:
+  mmaas_enabled: true
+  xgvela_metric_storage: disable
+  initContainer:
+    m3dbURL_value: http://xgvela-prometheus-server.xgvela-xgvela1-mgmt-xgvela-xgvela1.svc.cluster.local:9090
+    grafanaURL_value: http://grafana.xgvela-paas.svc.cluster.local:3000
+  server_configmap: xgvela-prometheus-server
+  m3coordinator_version: v0.15.6
+  alertmanager_configmap: xgvela-prometheus-alertmanager
+  control_prometheus_conf: disable
+  xgvela_metric_storage: disable
+  xgvela_scrape_level: cluster
+  prometheus_operator: disable
+  prometheus_crd_name: prom-monitoring-prometheus
+  operator_namespace: mointoring
+  scrape_namespace: "any"
+  non_clock_aligned_port_names: "metrics"
+  clock_aligned_port_names: "metrics"
+
+m3db:
+  m3dbnode:
+    mmaas_enabled: false
+    xgvela_prom_enabled: false
+  local-volume-provisoner:
+    xgvela_prom_enabled:  false
+prometheus:
+  server:
+    enabled: true
+    statefulSet:
+      enabled: true
+    persistentVolume:
+      enabled: true
+    retention: "1d"
+    service:
+      servicePort: 9090
+      nodePort: 30999
+      type: NodePort
+    resources:
+      limits:
+        cpu: 1500m
+        memory: 3500Mi
+      requests:
+        cpu: 750m
+        memory: 2500Mi
+    nodeSelector:
+      mgmt: "true"
+  pushgateway:
+    enabled: false
+    persistentVolume:
+      enabled: false
+  alertmanager:
+    enabled: true
+    persistentVolume:
+      enabled: false
+    resources:
+      limits:
+        cpu: 100m
+        memory: 200Mi
+      requests:
+        cpu: 50m
+        memory: 100Mi
+    nodeSelector:
+      mgmt: "true"
+  configmapReload:
+    prometheus:
+      resources:
+        limits:
+          cpu: 100m
+          memory: 200Mi
+        requests:
+          cpu: 50m
+          memory: 100Mi
+    alertmanager:
+      resources:
+        limits:
+          cpu: 100m
+          memory: 200Mi
+        requests:
+          cpu: 50m
+          memory: 100Mi
+  nodeExporter:
+    enabled: true
+    resources:
+      limits:
+        cpu: 500m
+        memory: 500Mi
+      requests:
+        cpu: 250m
+        memory: 250Mi
+  forceNamespace: xgvela-xgvela1-mgmt-xgvela-xgvela1
+kube-state-metrics:
+  enabled: true
+  resources:
+    limits:
+      cpu: 100m
+      memory: 500Mi
+    requests:
+      cpu: 50m
+      memory: 250Mi
+  nodeSelector:
+    mgmt: "true"
+  namespaceOverride: "xgvela-xgvela1-mgmt-xgvela-xgvela1"
+prometheus-adapter:
+  enabled: true
+  nodeSelector:
+    mgmt: "true"
+  forceNamespace: xgvela-xgvela1-mgmt-xgvela-xgvela1
+fault-service:
+  mgmt_version: "mgmt_tag"
+alerts:
+   diskspace: 70
+   cpu: 80
+   memory: 80
