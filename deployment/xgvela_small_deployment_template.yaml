@@ -17,7 +17,7 @@
 
 global:
   hub: localhost:5000
-  dnPrefix: "xgvela"
+  dnPrefix: "$xgvelaId"
   xgvela:
     ##use_release_ns indicates whether to use release namespace for xgvela. set this to false and create_ns true for xgvela to create the namespace as per xgvela standards
     use_release_ns: true
@@ -41,9 +41,9 @@ global:
       labelValue: true
 
     ##when use_release_ns is set to true, Kafka and etcd service fqdn. set the appropriate namespace(<namespace> to be replaced with release namespace) in the value. Comment the lines in case if use_release_ns=false
-    kafka_svc_fqdn: "kafka-svc.xgvela.svc.cluster.local:9092"
-    etcd_svc_fqdn: "etcd.xgvela.svc.cluster.local:2379"
-    zk_svc_fqdn: "zk-0.zk.xgvela.svc.cluster.local:2181,zk-1.zk.xgvela.svc.cluster.local:2181,zk-2.zk.xgvela.svc.cluster.local:2181"
+    kafka_svc_fqdn: "kafka-svc.$xgvelaId.svc.cluster.local:9092"
+    etcd_svc_fqdn: "etcd.$xgvelaId.svc.cluster.local:2379"
+    zk_svc_fqdn: "zk-0.zk.$xgvelaId.svc.cluster.local:2181,zk-1.zk.$xgvelaId.svc.cluster.local:2181,zk-2.zk.$xgvelaId.svc.cluster.local:2181"
 
     ##Backend Storage
     storage_engine: "zookeeper"
@@ -52,10 +52,10 @@ global:
     storage:
       isProviderXGVela: true
       storageClass: "xgvela-local-storage"
-      xgvelaLocalStorageHostPathPrefix: "/private/tmp/xgvela/data"
+      xgvelaLocalStorageHostPathPrefix: "$hostDataDir"
       xgvelaLocalStoragePVJobTag: "v0.1"
       hostlocalVolumeSelector:
-      - docker-desktop
+      - $hostId
 
 xgvela-infra:
   etcd:
@@ -100,7 +100,7 @@ xgvela-mgmt:
         image:
           tag: v0.1
         mount:
-          host_path: /private/tmp/xgvela/data
+          host_path: $hostDataDir
         resource:
           limit_memory: 500Mi
           limit_cpu: 200m
@@ -111,7 +111,7 @@ xgvela-mgmt:
         image:
           tag: v0.1
         mount:
-          host_path: /private/tmp/xgvela/data/logs
+          host_path: $hostLogsDir
         resource:
           limit_memory: 200Mi
           limit_cpu: 100m
@@ -133,7 +133,7 @@ xgvela-mgmt:
         image:
           tag: v0.1
         mount:
-          host_path: /private/tmp/xgvela/data/logs
+          host_path: $hostLogsDir
         resource:
           limit_memory: 200Mi
           limit_cpu: 100m
@@ -154,7 +154,7 @@ xgvela-mgmt:
         cim:
           tag: v0.1
           mount:
-            host_path: /private/tmp/xgvela/data/logs
+            host_path: $hostLogsDir
           resource:
             limit_memory: 200Mi
             limit_cpu: 100m
@@ -175,7 +175,7 @@ xgvela-mgmt:
         cim:
           tag: v0.1
           mount:
-            host_path: /private/tmp/xgvela/data/logs
+            host_path: $hostLogsDir
           resource:
             limit_memory: 200Mi
             limit_cpu: 100m
@@ -191,7 +191,7 @@ xgvela-mgmt:
         image:
           tag: v0.1
         mount:
-          host_path: /private/tmp/xgvela/data/logs
+          host_path: $hostLogsDir
         resource:
           limit_memory: 200Mi
           limit_cpu: 100m
