@@ -30,11 +30,12 @@ GIT_MCF_REPO_PREFIX="git clone https://github.com/XGVela"
 RELEASE_BRANCH=`git rev-parse --abbrev-ref HEAD`
 
 #######
-XGVela_ARTIFACTS=./artifacts
-XGVela_IMAGES=$XGVela_ARTIFACTS/images
-XGVela_CHARTS=$XGVela_ARTIFACTS/charts
-XGVela_TEMPLATES=$XGVela_ARTIFACTS/templates
-XGVela_CONFIGS=$XGVela_ARTIFACTS/configs
+BUILD_DIR=$(pwd)/build
+ARTIFACTS_DIR=./artifacts
+IMAGES_DIR=$ARTIFACTS_DIR/images
+CHARTS_DIR=$ARTIFACTS_DIR/charts
+TEMPLATES_DIR=$ARTIFACTS_DIR/templates
+CONFIGS_DIR=$ARTIFACTS_DIR/configs
 
 DEBUG=1
 LOGFILE="xgvela-build-"$(date +"%Y%m%d").log
@@ -78,13 +79,12 @@ debug() {
 }
 
 build_mcf_repo() {
-    WORKDIR=$1
-    MODULE=$2
-    ARGS=$3
+    MODULE=$1
+    ARGS=$2
     info "Building Repo: $MODULE $ARGS"
-    cd $WORKDIR
+    cd $BUILD_DIR
     $GIT_MCF_REPO_PREFIX/$MODULE.git
-    cd $WORKDIR/$MODULE
+    cd $BUILD_DIR/$MODULE
     git checkout $RELEASE_BRANCH
     if [[ "$MODULE" == "cmaas" ]]; then
         cp ../../confd-target.tgz build/cmaas-base/
@@ -93,39 +93,36 @@ build_mcf_repo() {
 }
 
 prepare_xgvela_release_env() {
-    WORKDIR=$1
     info "Preparing XGVela Release Environment"
-    cd $WORKDIR
-    rm -rf $XGVela_ARTIFACTS
-    mkdir -p $XGVela_ARTIFACTS
-    mkdir -p $XGVela_IMAGES
-    mkdir -p $XGVela_TEMPLATES
-    mkdir -p $XGVela_CONFIGS
-    mkdir -p $XGVela_CHARTS
-    cp -rf ../charts/xgvela $XGVela_CHARTS/
-    cp -rf ../images/* $XGVela_IMAGES
-    mkdir -p $XGVela_CHARTS/xgvela/charts/xgvela-mgmt/charts/
-    sed -i -e "s/cnf_mgmt_tag/$CNF_MGMT_VERSION/" $XGVela_CHARTS/xgvela/Chart.yaml
+    cd $BUILD_DIR
+    rm -rf $ARTIFACTS_DIR
+    mkdir -p $ARTIFACTS_DIR
+    mkdir -p $IMAGES_DIR
+    mkdir -p $TEMPLATES_DIR
+    mkdir -p $CONFIGS_DIR
+    mkdir -p $CHARTS_DIR
+    cp -rf ../charts/xgvela $CHARTS_DIR/
+    cp -rf ../images/* $IMAGES_DIR
+    mkdir -p $CHARTS_DIR/xgvela/charts/xgvela-mgmt/charts/
+    sed -i -e "s/cnf_mgmt_tag/$CNF_MGMT_VERSION/" $CHARTS_DIR/xgvela/Chart.yaml
 }
 
 generate_xgvela_artifacts() {
-    WORKDIR=$1
     MODULE=$2
     info "Generating XGVela Artifacts for $MODULE"
-    cd $WORKDIR
-    [ -d $MODULE/artifacts/template/ ] && cp -rf $MODULE/artifacts/template/* $XGVela_TEMPLATES/ || echo "Ignoring template"
-    [ -d $MODULE/artifacts/images/ ] && cp -rf $MODULE/artifacts/images/* $XGVela_IMAGES/ || echo "Ignoring images"
-    [ -d $MODULE/artifacts/config/ ] && cp -rf $MODULE/artifacts/config/* $XGVela_CONFIGS/ || echo "Ignoring config"
-    [ -d $MODULE/artifacts/charts/ ] && cp -rf $MODULE/artifacts/charts/* $XGVela_CHARTS/xgvela/charts/xgvela-mgmt/charts/ || echo "Ignoring charts"
+    cd $BUILD_DIR
+    [ -d $MODULE/artifacts/template/ ] && cp -rf $MODULE/artifacts/template/* $TEMPLATES_DIR/ || echo "Ignoring template"
+    [ -d $MODULE/artifacts/images/ ] && cp -rf $MODULE/artifacts/images/* $IMAGES_DIR/ || echo "Ignoring images"
+    [ -d $MODULE/artifacts/config/ ] && cp -rf $MODULE/artifacts/config/* $CONFIGS_DIR/ || echo "Ignoring config"
+    [ -d $MODULE/artifacts/charts/ ] && cp -rf $MODULE/artifacts/charts/* $CHARTS_DIR/xgvela/charts/xgvela-mgmt/charts/ || echo "Ignoring charts"
 }
 
 package_xgvela_chart() {
-    WORKDIR=$1
     info "Packaging XGVela chart"
-    cd $XGVela_CHARTS
+    cd $CHARTS_DIR
     tar -czf "xgvela-$CNF_MGMT_VERSION.tgz" xgvela
     cp "xgvela-$CNF_MGMT_VERSION.tgz" ../
-    cd $WORKDIR/artifacts
+    cd $BUILD_DIR/artifacts
     tar -czf "xgvela-$CNF_MGMT_VERSION-sdk.tgz" configs templates
     md5sum images/* >>md5sum.info
     md5sum *.tgz >>md5sum.info
@@ -133,53 +130,52 @@ package_xgvela_chart() {
 }
 
 clean_intermediate_artifacts() {
-    WORKDIR=$1
-    MODULE=$2
+    MODULE=$1
     info "Deleting intermediate artifacts: $MODULE"
-    cd $WORKDIR
-    rm -rf $WORKDIR/$MODULE
+    rm -rf $BUILD_DIR/$MODULE
 }
 
 clean() {
-    rm -rf b build/*
+    rm -rf $BUILD_DIR/*
+    mkdir -p $BUILD_DIR
 }
 
 build() {
     info "Starting XGVela Build..."
-    build_mcf_repo $CUR_WORKDIR cim "$CIM_IMAGE_VERSION"
-    build_mcf_repo $CUR_WORKDIR cmaas "$CMAAS_IMAGE_VERSION $CIM_IMAGE_VERSION"
-    build_mcf_repo $CUR_WORKDIR fmaas "$FMAAS_IMAGE_VERSION $CIM_IMAGE_VERSION"
-    build_mcf_repo $CUR_WORKDIR vesgw "$VESGW_IMAGE_VERSION $VESSIM_IMAGE_VERSION"
-    build_mcf_repo $CUR_WORKDIR tmaas "$TOPOENG_IMAGE_VERSION $CIM_IMAGE_VERSION"
-    build_mcf_repo $CUR_WORKDIR tmaas-gw "$TOPOGW_IMAGE_VERSION $CIM_IMAGE_VERSION"
-    build_mcf_repo $CUR_WORKDIR service-init "$SVCINIT_IMAGE_VERSION"
-    build_mcf_repo $CUR_WORKDIR cnf-packaging ""
+    build_mcf_repo cim "$CIM_IMAGE_VERSION"
+    build_mcf_repo cmaas "$CMAAS_IMAGE_VERSION $CIM_IMAGE_VERSION"
+    build_mcf_repo fmaas "$FMAAS_IMAGE_VERSION $CIM_IMAGE_VERSION"
+    build_mcf_repo vesgw "$VESGW_IMAGE_VERSION $VESSIM_IMAGE_VERSION"
+    build_mcf_repo tmaas "$TOPOENG_IMAGE_VERSION $CIM_IMAGE_VERSION"
+    build_mcf_repo tmaas-gw "$TOPOGW_IMAGE_VERSION $CIM_IMAGE_VERSION"
+    build_mcf_repo service-init "$SVCINIT_IMAGE_VERSION"
+    build_mcf_repo cnf-packaging ""
 
-    prepare_xgvela_release_env $CUR_WORKDIR
+    prepare_xgvela_release_env
 
-    generate_xgvela_artifacts $CUR_WORKDIR cim
-    generate_xgvela_artifacts $CUR_WORKDIR cmaas
-    generate_xgvela_artifacts $CUR_WORKDIR fmaas
-    generate_xgvela_artifacts $CUR_WORKDIR vesgw
-    generate_xgvela_artifacts $CUR_WORKDIR tmaas
-    generate_xgvela_artifacts $CUR_WORKDIR tmaas-gw
-    generate_xgvela_artifacts $CUR_WORKDIR service-init
-    generate_xgvela_artifacts $CUR_WORKDIR cnf-packaging
+    generate_xgvela_artifacts cim
+    generate_xgvela_artifacts cmaas
+    generate_xgvela_artifacts fmaas
+    generate_xgvela_artifacts vesgw
+    generate_xgvela_artifacts tmaas
+    generate_xgvela_artifacts tmaas-gw
+    generate_xgvela_artifacts service-init
+    generate_xgvela_artifacts cnf-packaging
 
-    package_xgvela_chart $CUR_WORKDIR
+    package_xgvela_chart
 
-    clean_intermediate_artifacts $CUR_WORKDIR cim
-    clean_intermediate_artifacts $CUR_WORKDIR cmaas
-    clean_intermediate_artifacts $CUR_WORKDIR fmaas
-    clean_intermediate_artifacts $CUR_WORKDIR vesgw
-    clean_intermediate_artifacts $CUR_WORKDIR tmaas
-    clean_intermediate_artifacts $CUR_WORKDIR tmaas-gw
-    clean_intermediate_artifacts $CUR_WORKDIR service-init
-    clean_intermediate_artifacts $CUR_WORKDIR cnf-packaging
+    clean_intermediate_artifacts cim
+    clean_intermediate_artifacts cmaas
+    clean_intermediate_artifacts fmaas
+    clean_intermediate_artifacts vesgw
+    clean_intermediate_artifacts tmaas
+    clean_intermediate_artifacts tmaas-gw
+    clean_intermediate_artifacts service-init
+    clean_intermediate_artifacts cnf-packaging
     info "Completed XGVela Build"
 }
 
-CUR_WORKDIR=$(pwd)/build
+
 #logsetup
 clean
 build
