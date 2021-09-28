@@ -108,7 +108,7 @@ prepare_xgvela_release_env() {
 }
 
 generate_xgvela_artifacts() {
-    MODULE=$2
+    MODULE=$1
     info "Generating XGVela Artifacts for $MODULE"
     cd $BUILD_DIR
     [ -d $MODULE/artifacts/template/ ] && cp -rf $MODULE/artifacts/template/* $TEMPLATES_DIR/ || echo "Ignoring template"
