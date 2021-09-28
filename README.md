@@ -76,18 +76,6 @@ Build and package xGVela Telco PaaS.
 
         Here 'docker-desktop' is the hostId.
         ```
-1. Prepare the cluster
-    * Set node labels intra=true and mgmt=true using below commands
-        ```
-        $ kubectl label nodes docker-desktop infra=true
-        $ kubectl label nodes docker-desktop mgmt=true
-        ```
-    * Check if labels are set using below command
-        ```
-        $ kubectl get nodes --show-labels                        
-        NAME             STATUS   ROLES                  AGE   VERSION   LABELS
-          docker-desktop   Ready    control-plane,master   94m   v1.21.4   beta.kubernetes.io/arch=amd64,beta.kubernetes.io/os=linux,infra=true,kubernetes.io/arch=amd64,kubernetes.io/hostname=docker-desktop,kubernetes.io/os=linux,mgmt=true,node-role.kubernetes.io/control-plane=,node-role.kubernetes.io/master=,node.kubernetes.io/exclude-from-external-load-balancers=
-        ```
 1. If an image registration is not available, create one locally using below command,
     ```
     $  docker run -d -p 5000:5000 --restart=always --name registry registry:2
@@ -142,9 +130,6 @@ Build and package xGVela Telco PaaS.
             ├── etcd-pv
             │   └── vol-0
             │       └── etcd-0
-            │           └── member
-            │               ├── snap
-            │               └── wal
             ├── kafka-pv
             │   └── vol-0
             │       └── kafka-logs-kafka-0
